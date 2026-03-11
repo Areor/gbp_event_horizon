@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVENT HORIZON</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --transition: 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+[data-theme="dark"] {
+  --bg:       #000000;
+  --bg2:      #080808;
+  --surface:  #111111;
+  --surface2: #1a1a1a;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #ffffff;
+  --text2:    rgba(255,255,255,0.55);
+  --text3:    rgba(255,255,255,0.28);
+  --red:      #e8383b;
+  --gold:     #c8a832;
+  --n-edge:   rgba(255,255,255,0.15);
+  --n-node:   rgba(255,255,255,0.28);
+  --glow:     rgba(255,255,255,0.03);
+}
+[data-theme="light"] {
+  --bg:       #f4f4f4;
+  --bg2:      #ececec;
+  --surface:  #ffffff;
+  --surface2: #e8e8e8;
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.16);
+  --text:     #000000;
+  --text2:    rgba(0,0,0,0.55);
+  --text3:    rgba(0,0,0,0.3);
+  --red:      #c02428;
+  --gold:     #8a6600;
+  --n-edge:   rgba(0,0,0,0.09);
+  --n-node:   rgba(0,0,0,0.14);
+  --glow:     rgba(0,0,0,0.03);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Barlow',sans-serif;font-weight:400;
+  overflow-x:hidden;
+  transition:background var(--transition),color var(--transition);
+}
+
+#nc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+.app{
+  display:grid;
+  grid-template-columns:52px 1fr 230px;
+  grid-template-rows:52px 1fr;
+  min-height:100vh;
+  position:relative;z-index:1;
+}
+
+.topbar{
+  grid-column:1/4;grid-row:1;
+  display:flex;align-items:center;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+  position:sticky;top:0;z-index:100;
+  transition:background var(--transition),border-color var(--transition);
+}
+.tb-logo{
+  width:52px;height:52px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-right:1px solid var(--border);
+  transition:border-color var(--transition);
+}
+.tb-logo svg{width:26px;height:26px;color:var(--text);transition:color var(--transition);}
+.tb-brand{
+  padding:0 20px;height:100%;
+  display:flex;align-items:center;
+  border-right:1px solid var(--border);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:5px;
+  text-transform:uppercase;color:var(--text);white-space:nowrap;
+  transition:color var(--transition),border-color var(--transition);
+}
+.tb-ticker{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;padding:0 16px;}
+.tick-inner{
+  display:flex;gap:56px;white-space:nowrap;
+  animation:tickMove 70s linear infinite;
+}
+.tick-item{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;letter-spacing:1.5px;color:var(--text2);
+  text-transform:uppercase;display:flex;align-items:center;gap:8px;
+  transition:color var(--transition);
+}
+.tick-dot{width:4px;height:4px;border-radius:50%;background:var(--red);flex-shrink:0;}
+@keyframes tickMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tb-right{display:flex;align-items:center;gap:14px;padding:0 14px;flex-shrink:0;}
+.live-pill{
+  display:flex;align-items:center;gap:5px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--red);
+}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:lp 1.4s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+.utc{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;letter-spacing:2px;color:var(--text3);
+  transition:color var(--transition);
+}
+.mode-lbl{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;letter-spacing:1.5px;color:var(--text3);
+  text-transform:uppercase;cursor:pointer;
+  transition:color var(--transition);
+}
+.tog{
+  width:34px;height:18px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border2);
+  cursor:pointer;position:relative;flex-shrink:0;
+  transition:background var(--transition),border-color var(--transition);
+}
+.tog-thumb{
+  position:absolute;top:2px;left:2px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--text);
+  transition:transform var(--transition),background var(--transition);
+}
+[data-theme="light"] .tog-thumb{transform:translateX(16px);}
+
+.sl{
+  grid-column:1;grid-row:2;
+  border-right:1px solid var(--border);background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;
+  padding:10px 0;gap:2px;
+  position:sticky;top:52px;height:calc(100vh - 52px);overflow:hidden;
+  transition:background var(--transition),border-color var(--transition);
+}
+.ni{
+  width:38px;height:38px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);font-size:14px;text-decoration:none;
+  cursor:pointer;position:relative;
+  transition:color .2s,background .2s;
+}
+.ni:hover{color:var(--text);background:var(--surface);}
+.ni::before{
+  content:'';position:absolute;left:0;top:8px;bottom:8px;
+  width:2px;background:var(--text);opacity:0;
+  transition:opacity .2s;
+}
+.ni:hover::before{opacity:1;}
+.ni .tip{
+  position:absolute;left:44px;
+  background:var(--surface2);border:1px solid var(--border2);
+  padding:4px 10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text);
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity .15s;z-index:200;
+}
+.ni:hover .tip{opacity:1;}
+.ndiv{width:18px;height:1px;background:var(--border);margin:3px 0;transition:background var(--transition);}
+.nbadge{
+  position:absolute;top:5px;right:5px;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--red);animation:lp 1.4s infinite;
+}
+
+main{grid-column:2;grid-row:2;overflow-y:auto;overflow-x:hidden;}
+
+#hero{
+  height:100vh;min-height:580px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+  transition:border-color var(--transition);
+}
+.ss-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.ss-inner{position:relative;display:flex;align-items:center;justify-content:center;}
+
+.bh{position:absolute;width:80px;height:80px;display:flex;align-items:center;justify-content:center;z-index:10;}
+.bh-gw{
+  position:absolute;width:80px;height:80px;border-radius:50%;
+  border:1px solid var(--text);opacity:0;
+  animation:bhw 4s ease-out infinite;
+}
+.bh-gw:nth-child(1){animation-delay:0s}
+.bh-gw:nth-child(2){animation-delay:.57s}
+.bh-gw:nth-child(3){animation-delay:1.14s}
+.bh-gw:nth-child(4){animation-delay:1.71s}
+.bh-gw:nth-child(5){animation-delay:2.28s}
+.bh-gw:nth-child(6){animation-delay:2.85s}
+.bh-gw:nth-child(7){animation-delay:3.42s}
+@keyframes bhw{0%{transform:scale(.12);opacity:.6}100%{transform:scale(3.8);opacity:0}}
+
+.bh-disk{
+  position:absolute;width:80px;height:26px;border-radius:50%;
+  animation:dr 5s linear infinite;z-index:2;filter:blur(2px);
+}
+[data-theme="dark"] .bh-disk{
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(255,170,50,.8) 40deg,rgba(255,240,120,1) 80deg,rgba(255,150,40,.7) 120deg,transparent 160deg,rgba(140,200,255,.35) 220deg,transparent 270deg,rgba(255,110,20,.45) 320deg,transparent 360deg);
+}
+[data-theme="light"] .bh-disk{
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(100,70,10,.5) 40deg,rgba(160,120,20,.7) 80deg,rgba(100,70,10,.45) 120deg,transparent 160deg,rgba(20,60,120,.25) 220deg,transparent 270deg,rgba(130,80,10,.4) 320deg,transparent 360deg);
+}
+@keyframes dr{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.bh-core{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--bg);position:absolute;z-index:5;
+  box-shadow:0 0 24px var(--bg),0 0 48px var(--bg);
+  border:1px solid var(--border2);
+  transition:background var(--transition),border-color var(--transition);
+}
+
+.or{
+  position:absolute;border-radius:50%;
+  border:1px solid var(--border);
+  animation:os linear infinite;
+  transition:border-color var(--transition);
+}
+.or .pl{position:absolute;border-radius:50%;top:0;left:50%;transform:translateX(-50%) translateY(-50%);}
+@keyframes os{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.hero-txt{position:relative;z-index:20;text-align:center;pointer-events:none;}
+.hero-eye{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;
+  letter-spacing:5px;color:var(--text3);text-transform:uppercase;margin-bottom:16px;
+  animation:fu 1s .3s both;transition:color var(--transition);
+}
+.hero-h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(50px,8vw,96px);font-weight:800;
+  letter-spacing:-1px;line-height:.92;text-transform:uppercase;
+  color:var(--text);animation:fu 1s .5s both;transition:color var(--transition);
+}
+.hero-h1 .ol{
+  -webkit-text-stroke:1px var(--text);color:transparent;
+  transition:-webkit-text-stroke-color var(--transition);
+}
+.hero-sub{
+  font-family:'Barlow',sans-serif;font-size:12px;font-weight:300;
+  letter-spacing:2.5px;color:var(--text2);text-transform:uppercase;
+  margin-top:18px;animation:fu 1s .7s both;transition:color var(--transition);
+}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.hero-scroll{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;z-index:20;
+}
+.scl{width:1px;height:44px;background:linear-gradient(to bottom,var(--text2),transparent);animation:sp 2s ease-in-out infinite;}
+@keyframes sp{0%,100%{opacity:.4}50%{opacity:1}}
+.scl-lbl{
+  font-family:'Barlow Condensed',sans-serif;font-size:8px;
+  letter-spacing:3px;color:var(--text3);text-transform:uppercase;writing-mode:vertical-lr;
+  transition:color var(--transition);
+}
+
+.sections section{border-bottom:1px solid var(--border);transition:border-color var(--transition);}
+.sh{display:grid;grid-template-columns:4px 1fr;align-items:stretch;border-bottom:1px solid var(--border);transition:border-color var(--transition);}
+.sh-bar{background:var(--text);transition:background var(--transition);}
+.sh-inner{padding:14px 26px;display:flex;align-items:center;justify-content:space-between;}
+.sh-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:4px;text-transform:uppercase;color:var(--text);
+  display:flex;align-items:center;gap:10px;transition:color var(--transition);
+}
+.sh-count{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:2px;color:var(--text3);transition:color var(--transition);
+}
+.sb{padding:26px;}
+
+.ng{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+.nc{
+  background:var(--bg);padding:22px;cursor:pointer;
+  position:relative;overflow:hidden;transition:background .2s;
+}
+.nc:hover{background:var(--surface);}
+.nc.s2{grid-column:span 2;}
+.nc.s2 .nc-in{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+.fv{
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:56px;min-height:130px;border-radius:1px;
+  transition:background var(--transition),border-color var(--transition);
+}
+.ntag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.tr{color:var(--red)}.tg{color:var(--gold)}.td{color:var(--text3)}
+.nhl{
+  font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
+  line-height:1.25;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text);margin-bottom:8px;transition:color var(--transition);
+}
+.nb{font-size:12px;line-height:1.65;color:var(--text2);font-weight:300;transition:color var(--transition);}
+.nm{
+  margin-top:14px;padding-top:10px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;
+  transition:color var(--transition),border-color var(--transition);
+}
+
+.tl{display:flex;flex-direction:column;}
+.tr-row{
+  display:grid;grid-template-columns:88px 24px 1fr 80px;
+  align-items:center;gap:0;
+  border-bottom:1px solid var(--border);padding:18px 0;cursor:pointer;
+  transition:border-color var(--transition);
+}
+.tr-row:last-child{border-bottom:none;}
+.tr-row:hover .tr-title{color:var(--text);}
+.tr-date{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;
+  text-align:right;padding-right:12px;line-height:1.4;
+  transition:color var(--transition);
+}
+.tr-nw{display:flex;flex-direction:column;align-items:center;height:100%;position:relative;}
+.tr-ln{width:1px;flex:1;background:var(--border);transition:background var(--transition);}
+.tr-nd{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  border:1px solid var(--text3);background:var(--bg);
+  transition:all .2s;
+}
+.tr-nd.live{background:var(--red);border-color:var(--red);box-shadow:0 0 7px var(--red);animation:lp 1.4s infinite;}
+.tr-info{padding:0 14px;}
+.tr-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--text2);
+  transition:color .2s;
+}
+.tr-desc{font-size:11px;font-weight:300;color:var(--text3);margin-top:3px;line-height:1.5;transition:color var(--transition);}
+.tr-eta{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:1.5px;color:var(--text3);text-align:right;text-transform:uppercase;
+  transition:color var(--transition);
+}
+.tr-eta.now{color:var(--red);}
+
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
+.mc{background:var(--bg);padding:22px;cursor:pointer;transition:background .2s;}
+.mc:hover{background:var(--surface);}
+.mcs{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;
+  gap:5px;margin-bottom:12px;
+}
+.mcs::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.mcs.act{color:#4caf50}.mcs.act::before{animation:lp 1.5s infinite}
+.mcs.tra{color:#ff9800}.mcs.orb{color:#64b5f6}.mcs.int{color:var(--text2)}
+.mn{
+  font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;color:var(--text);
+  margin-bottom:1px;line-height:1;transition:color var(--transition);
+}
+.ma{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;
+  color:var(--text3);text-transform:uppercase;margin-bottom:14px;
+  transition:color var(--transition);
+}
+.ms{
+  display:flex;flex-direction:column;gap:7px;
+  border-top:1px solid var(--border);padding-top:12px;
+  transition:border-color var(--transition);
+}
+.ms-r{display:flex;justify-content:space-between;align-items:baseline;}
+.ms-k{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;transition:color var(--transition);}
+.ms-v{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text);text-transform:uppercase;transition:color var(--transition);}
+.mb{margin-top:12px;height:2px;background:var(--surface2);position:relative;transition:background var(--transition);}
+.mbf{height:100%;background:var(--text);position:relative;transition:background var(--transition);}
+.mbf::after{content:'';position:absolute;right:0;top:-3px;width:1px;height:8px;background:var(--text);}
+
+.dg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
+.dc{background:var(--bg);padding:22px;cursor:pointer;transition:background .2s;}
+.dc:hover{background:var(--surface);}
+.dt{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;transition:color var(--transition);}
+.di{font-size:30px;margin-bottom:12px;display:block;}
+.dn{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text);margin-bottom:7px;line-height:1.2;transition:color var(--transition);}
+.dd{font-size:11px;font-weight:300;color:var(--text2);line-height:1.6;transition:color var(--transition);}
+.dc-co{
+  margin-top:12px;font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:2px;color:var(--text3);border-top:1px solid var(--border);
+  padding-top:9px;transition:color var(--transition),border-color var(--transition);
+}
+
+.sky-lay{display:grid;grid-template-columns:250px 1fr;gap:24px;}
+.sky-dome{
+  width:250px;height:250px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:background var(--transition),border-color var(--transition);
+}
+.sky-hor{
+  position:absolute;bottom:0;left:0;right:0;height:50%;
+  border-top:1px solid var(--border);
+  transition:border-color var(--transition);
+}
+.sky-sd{position:absolute;border-radius:50%;background:var(--text);opacity:.35;}
+.sky-cmp{
+  position:absolute;font-family:'Barlow Condensed',sans-serif;
+  font-size:8px;letter-spacing:1px;color:var(--text3);font-weight:600;
+  transition:color var(--transition);
+}
+.sky-tbl{display:flex;flex-direction:column;}
+.sky-rw{
+  display:grid;grid-template-columns:32px 1fr 1fr 70px;
+  align-items:center;gap:10px;padding:12px 0;
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:border-color var(--transition);
+}
+.sky-rw:last-child{border-bottom:none;}
+.sky-rw:hover .son{color:var(--text);}
+.sky-ic{font-size:18px;text-align:center;}
+.son{
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--text2);
+  transition:color .2s;
+}
+.stm{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;
+  margin-top:2px;transition:color var(--transition);
+}
+.smag{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1px;color:var(--text3);text-align:right;transition:color var(--transition);
+}
+.srat{display:flex;gap:1px;font-size:9px;justify-content:flex-end;}
+.son-on{color:var(--text)}.son-off{color:var(--border2)}
+
+.sr{
+  grid-column:3;grid-row:2;
+  border-left:1px solid var(--border);background:var(--bg);
+  display:flex;flex-direction:column;
+  position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;
+  transition:background var(--transition),border-color var(--transition);
+}
+.ad{
+  border-bottom:1px solid var(--border);padding:14px 12px;
+  cursor:pointer;transition:background .2s,border-color var(--transition);
+}
+.ad:hover{background:var(--surface);}
+.ad:last-child{border-bottom:none;}
+.ad-m{
+  font-family:'Barlow Condensed',sans-serif;font-size:7px;
+  letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;
+  transition:color var(--transition);
+}
+.ad-vis{
+  width:100%;aspect-ratio:16/7;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin-bottom:9px;position:relative;overflow:hidden;
+  background:var(--surface);
+  transition:border-color var(--transition),background var(--transition);
+}
+.ad-vis .adbg{
+  position:absolute;font-family:'Barlow Condensed',sans-serif;
+  font-size:40px;font-weight:800;color:var(--border2);letter-spacing:2px;
+  text-transform:uppercase;user-select:none;transition:color var(--transition);
+}
+.ad-br{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text);
+  transition:color var(--transition);
+}
+.ad-cp{
+  font-size:10px;font-weight:300;color:var(--text2);line-height:1.5;
+  margin-top:3px;margin-bottom:9px;transition:color var(--transition);
+}
+.ad-bt{
+  display:inline-block;font-family:'Barlow Condensed',sans-serif;
+  font-size:8px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  padding:4px 11px;border:1px solid var(--border2);
+  color:var(--text);background:transparent;cursor:pointer;
+  transition:all .2s;
+}
+.ad-bt:hover{background:var(--text);color:var(--bg);}
+.ad-sp{
+  font-family:'Barlow Condensed',sans-serif;font-size:7px;
+  letter-spacing:1px;color:var(--text3);margin-top:7px;
+  transition:color var(--transition);
+}
+
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:0;}
+</style>
+</head>
+<body>
+
+<canvas id="nc"></canvas>
+
+<div class="app">
+
+<header class="topbar">
+  <div class="tb-logo">
+    <svg viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
+      <circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="0.6" opacity="0.45"/>
+      <circle cx="20" cy="20" r="6" fill="currentColor"/>
+      <ellipse cx="20" cy="20" rx="16" ry="4.5" stroke="currentColor" stroke-width="0.7" opacity="0.4" transform="rotate(-18 20 20)"/>
+    </svg>
+  </div>
+  <div class="tb-brand">Event Horizon</div>
+  <div class="tb-ticker">
+    <div class="tick-inner">
+      <span class="tick-item"><span class="tick-dot"></span>Webb detects biosignature candidate on K2-18b</span>
+      <span class="tick-item"><span class="tick-dot"></span>X2.4 solar flare — G3 geomagnetic storm warning</span>
+      <span class="tick-item"><span class="tick-dot"></span>Artemis IV crew confirmed — T−180 days to launch</span>
+      <span class="tick-item"><span class="tick-dot"></span>Voyager 1 anomaly resolved — probe operational at 24.1B km</span>
+      <span class="tick-item"><span class="tick-dot"></span>ESA JUICE enters Jupiter orbit insertion sequence</span>
+      <span class="tick-item"><span class="tick-dot"></span>Perseverance Sample 24 collected — Jezero Crater rim</span>
+      <span class="tick-item"><span class="tick-dot"></span>New pulsar in Andromeda — record 1122 rev/sec</span>
+      <span class="tick-item"><span class="tick-dot"></span>Webb detects biosignature candidate on K2-18b</span>
+      <span class="tick-item"><span class="tick-dot"></span>X2.4 solar flare — G3 geomagnetic storm warning</span>
+      <span class="tick-item"><span class="tick-dot"></span>Artemis IV crew confirmed — T−180 days to launch</span>
+      <span class="tick-item"><span class="tick-dot"></span>ESA JUICE enters Jupiter orbit insertion sequence</span>
+      <span class="tick-item"><span class="tick-dot"></span>Perseverance Sample 24 collected — Jezero Crater rim</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="live-pill"><div class="live-dot"></div>Live</div>
+    <div class="utc" id="utc">--:--:-- UTC</div>
+    <span class="mode-lbl" id="mlbl">Dark</span>
+    <div class="tog" id="tog"><div class="tog-thumb"></div></div>
+  </div>
+</header>
+
+<aside class="sl">
+  <a href="#hero" class="ni">◎<span class="tip">Overview</span></a>
+  <div class="ndiv"></div>
+  <a href="#breaking-news" class="ni">📡<span class="nbadge"></span><span class="tip">Breaking News</span></a>
+  <a href="#event-tracker" class="ni">🌌<span class="tip">Astronomical Events</span></a>
+  <a href="#mission-control" class="ni">🚀<span class="tip">Mission Control</span></a>
+  <a href="#deep-space" class="ni">🔭<span class="tip">Deep Space</span></a>
+  <a href="#night-sky-guide" class="ni">🌙<span class="tip">Night Sky — Tonight</span></a>
+</aside>
+
+<main id="mc">
+  <section id="hero">
+    <div class="ss-wrap">
+      <div class="ss-inner">
+        <div class="or" style="width:90px;height:90px;margin:-45px 0 0 -45px;animation-duration:5s"><div class="pl" style="width:5px;height:5px;background:#aaa;box-shadow:0 0 5px #aaa;margin-left:-2.5px"></div></div>
+        <div class="or" style="width:145px;height:145px;margin:-72px 0 0 -72px;animation-duration:10s"><div class="pl" style="width:7px;height:7px;background:#e8a060;box-shadow:0 0 7px #e8a060;margin-left:-3.5px"></div></div>
+        <div class="or" style="width:200px;height:200px;margin:-100px 0 0 -100px;animation-duration:17s"><div class="pl" style="width:8px;height:8px;background:#4488ee;box-shadow:0 0 9px #4488ee;margin-left:-4px"></div></div>
+        <div class="or" style="width:260px;height:260px;margin:-130px 0 0 -130px;animation-duration:26s"><div class="pl" style="width:6px;height:6px;background:#cc4422;box-shadow:0 0 7px #cc4422;margin-left:-3px"></div></div>
+        <div class="or" style="width:340px;height:340px;margin:-170px 0 0 -170px;animation-duration:46s"><div class="pl" style="width:17px;height:17px;background:radial-gradient(circle at 35% 35%,#f0c060,#c08020);box-shadow:0 0 13px rgba(240,192,96,.6);margin-left:-8.5px"></div></div>
+        <div class="or" style="width:430px;height:430px;margin:-215px 0 0 -215px;animation-duration:72s"><div class="pl" style="width:14px;height:14px;background:radial-gradient(circle at 35% 35%,#e0c880,#9a7030);box-shadow:0 0 10px rgba(224,200,128,.5);margin-left:-7px"></div></div>
+        <div class="bh">
+          <div class="bh-gw"></div><div class="bh-gw"></div><div class="bh-gw"></div>
+          <div class="bh-gw"></div><div class="bh-gw"></div><div class="bh-gw"></div><div class="bh-gw"></div>
+          <div class="bh-disk"></div>
+          <div class="bh-core"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-txt">
+      <div class="hero-eye">Deep Space News Network · Est. 2026</div>
+      <div class="hero-h1">EVENT<br><span class="ol">HORIZON</span></div>
+      <div class="hero-sub">Where the observable universe ends</div>
+    </div>
+    <div class="hero-scroll"><div class="scl"></div><div class="scl-lbl">Scroll</div></div>
+  </section>
+
+  <div class="sections">
+
+    <section id="breaking-news">
+      <div class="sh"><div class="sh-bar"></div><div class="sh-inner"><div class="sh-title">📡 Breaking News</div><div class="sh-count">04 Stories</div></div></div>
+      <div class="ng">
+        <div class="nc s2">
+          <div class="nc-in">
+            <div class="fv">🔭</div>
+            <div>
+              <div class="ntag tr">⚡ Breaking</div>
+              <div class="nhl">Webb Telescope Detects Potential Biosignature on Exoplanet K2-18b</div>
+              <div class="nb">The James Webb Space Telescope has identified spectroscopic signatures consistent with dimethyl sulfide (DMS) in the atmosphere of sub-Neptune exoplanet K2-18b — a compound produced almost exclusively by living organisms on Earth. Scientists urge caution pending additional observation windows.</div>
+              <div class="nm"><span>ESA / NASA JWST Science Team</span><span>12 min ago</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="nc">
+          <div class="ntag tr">⚡ Breaking</div>
+          <div class="nhl">X2.4 Solar Flare Triggers G3 Geomagnetic Storm Watch</div>
+          <div class="nb">NOAA's Space Weather Prediction Center issued a G3 watch following an X2.4 class flare from Active Region 3795. Aurora potentially visible at latitudes as low as 45°N tonight.</div>
+          <div class="nm"><span>NOAA SWPC</span><span>34 min ago</span></div>
+        </div>
+        <div class="nc">
+          <div class="ntag tg">★ Exclusive</div>
+          <div class="nhl">Record-Speed Pulsar Identified in Andromeda Galaxy</div>
+          <div class="nb">Chandra Observatory identifies a millisecond pulsar rotating at 1,122 rev/sec — the fastest ever observed beyond the Milky Way, challenging current neutron star formation models.</div>
+          <div class="nm"><span>Chandra / CfA</span><span>6 hrs ago</span></div>
+        </div>
+        <div class="nc">
+          <div class="ntag td">Update</div>
+          <div class="nhl">Voyager 1 Signal Anomaly Fully Resolved After 3 Weeks</div>
+          <div class="nb">NASA's JPL confirms Voyager 1 is fully operational at 24.1 billion km from Earth. Signal corruption traced to faulty FDS memory chip — patched via uplink successfully.</div>
+          <div class="nm"><span>NASA / JPL</span><span>2 hrs ago</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="event-tracker">
+      <div class="sh"><div class="sh-bar"></div><div class="sh-inner"><div class="sh-title">🌌 Astronomical Event Tracker</div><div class="sh-count">2026</div></div></div>
+      <div class="sb">
+        <div class="tl">
+          <div class="tr-row">
+            <div class="tr-date">Today<br>21:14 UTC</div>
+            <div class="tr-nw"><div class="tr-ln"></div><div class="tr-nd live"></div><div class="tr-ln"></div></div>
+            <div class="tr-info"><div class="tr-title">Mars Opposition</div><div class="tr-desc">Closest approach to Earth — 96.4 million km. All-night visibility. Magnitude −2.1. Best in 15 years.</div></div>
+            <div class="tr-eta now">Live Now</div>
+          </div>
+          <div class="tr-row">
+            <div class="tr-date">Mar 14<br>04:00 UTC</div>
+            <div class="tr-nw"><div class="tr-ln"></div><div class="tr-nd"></div><div class="tr-ln"></div></div>
+            <div class="tr-info"><div class="tr-title">Penumbral Lunar Eclipse</div><div class="tr-desc">Partial shadow eclipse visible from Europe, Africa and Americas. Moon dims ~10%.</div></div>
+            <div class="tr-eta">3 days</div>
+          </div>
+          <div class="tr-row">
+            <div class="tr-date">Mar 20<br>09:01 UTC</div>
+            <div class="tr-nw"><div class="tr-ln"></div><div class="tr-nd"></div><div class="tr-ln"></div></div>
+            <div class="tr-info"><div class="tr-title">Vernal Equinox 2026</div><div class="tr-desc">Sun crosses celestial equator northward. Equal day and night. Spring begins in northern hemisphere.</div></div>
+            <div class="tr-eta">9 days</div>
+          </div>
+          <div class="tr-row">
+            <div class="tr-date">Apr 2<br>02:30 UTC</div>
+            <div class="tr-nw"><div class="tr-ln"></div><div class="tr-nd"></div><div class="tr-ln"></div></div>
+            <div class="tr-info"><div class="tr-title">Lyrid Meteor Shower Peak</div><div class="tr-desc">Up to 18 meteors per hour. Radiant in Lyra. Best viewing after midnight, dark skies required.</div></div>
+            <div class="tr-eta">22 days</div>
+          </div>
+          <div class="tr-row">
+            <div class="tr-date">Apr 17<br>18:00 UTC</div>
+            <div class="tr-nw"><div class="tr-ln"></div><div class="tr-nd"></div><div class="tr-ln"></div></div>
+            <div class="tr-info"><div class="tr-title">Saturn Ring Plane Crossing</div><div class="tr-desc">Rings appear edge-on from Earth — nearly invisible through telescope. Rare geometric event.</div></div>
+            <div class="tr-eta">37 days</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mission-control">
+      <div class="sh"><div class="sh-bar"></div><div class="sh-inner"><div class="sh-title">🚀 Mission Control</div><div class="sh-count">6 Active</div></div></div>
+      <div class="mg">
+        <div class="mc"><div class="mcs act">Active</div><div class="mn">Artemis IV</div><div class="ma">NASA · Lunar Surface</div><div class="ms"><div class="ms-r"><span class="ms-k">Launch</span><span class="ms-v">T−180 days</span></div><div class="ms-r"><span class="ms-k">Crew</span><span class="ms-v">4 Astronauts</span></div><div class="ms-r"><span class="ms-k">Target</span><span class="ms-v">Lunar S. Pole</span></div></div><div class="mb"><div class="mbf" style="width:62%"></div></div></div>
+        <div class="mc"><div class="mcs tra">En Route</div><div class="mn">ESA JUICE</div><div class="ma">ESA · Jupiter Icy Moons</div><div class="ms"><div class="ms-r"><span class="ms-k">Distance</span><span class="ms-v">740M km</span></div><div class="ms-r"><span class="ms-k">Phase</span><span class="ms-v">JOI Sequence</span></div><div class="ms-r"><span class="ms-k">ETA Ganymede</span><span class="ms-v">2034</span></div></div><div class="mb"><div class="mbf" style="width:44%"></div></div></div>
+        <div class="mc"><div class="mcs orb">In Orbit</div><div class="mn">Perseverance</div><div class="ma">NASA · Mars 2020</div><div class="ms"><div class="ms-r"><span class="ms-k">Samples</span><span class="ms-v">24 Cached</span></div><div class="ms-r"><span class="ms-k">Distance</span><span class="ms-v">31.4 km</span></div><div class="ms-r"><span class="ms-k">Sol</span><span class="ms-v">Sol 1834</span></div></div><div class="mb"><div class="mbf" style="width:88%"></div></div></div>
+        <div class="mc"><div class="mcs act">Active</div><div class="mn">James Webb</div><div class="ma">NASA/ESA/CSA · L2 Orbit</div><div class="ms"><div class="ms-r"><span class="ms-k">Observations</span><span class="ms-v">6,240+</span></div><div class="ms-r"><span class="ms-k">Fuel Left</span><span class="ms-v">~18 Years</span></div><div class="ms-r"><span class="ms-k">Data/Day</span><span class="ms-v">12.8 TB</span></div></div><div class="mb"><div class="mbf" style="width:92%"></div></div></div>
+        <div class="mc"><div class="mcs int">Interstellar</div><div class="mn">Voyager 1</div><div class="ma">NASA · Launched 1977</div><div class="ms"><div class="ms-r"><span class="ms-k">Distance</span><span class="ms-v">24.1B km</span></div><div class="ms-r"><span class="ms-k">Signal Delay</span><span class="ms-v">22.3 hrs</span></div><div class="ms-r"><span class="ms-k">Power</span><span class="ms-v">240W RTG</span></div></div><div class="mb"><div class="mbf" style="width:100%"></div></div></div>
+        <div class="mc"><div class="mcs tra">Cruise Phase</div><div class="mn">Europa Clipper</div><div class="ma">NASA · Europa Flyby</div><div class="ms"><div class="ms-r"><span class="ms-k">ETA Europa</span><span class="ms-v">2030</span></div><div class="ms-r"><span class="ms-k">Flybys</span><span class="ms-v">49 Planned</span></div><div class="ms-r"><span class="ms-k">Instruments</span><span class="ms-v">9 Active</span></div></div><div class="mb"><div class="mbf" style="width:18%"></div></div></div>
+      </div>
+    </section>
+
+    <section id="deep-space">
+      <div class="sh"><div class="sh-bar"></div><div class="sh-inner"><div class="sh-title">🔭 Deep Space Discoveries</div><div class="sh-count">6 New</div></div></div>
+      <div class="dg">
+        <div class="dc"><div class="dt">Black Hole</div><span class="di">⚫</span><div class="dn">Sagittarius A* Record X-Ray Flare</div><div class="dd">A record X-ray flare 75× brighter than quiescent emission. Probable cause: star-disk interaction.</div><div class="dc-co">RA 17h 45m 40s · DEC −29° 00′ 28″</div></div>
+        <div class="dc"><div class="dt">Gravitational Wave</div><span class="di">🌀</span><div class="dn">GW260311 Neutron Star Merger</div><div class="dd">LIGO-Virgo-KAGRA detected a binary NS merger at 340 Mpc. Kilonova confirmed with r-process element production.</div><div class="dc-co">LIGO Hanford · SNR 14.2</div></div>
+        <div class="dc"><div class="dt">Exoplanet</div><span class="di">🌍</span><div class="dn">TOI-700 e: Second Habitable-Zone World</div><div class="dd">TESS confirms rocky planet in habitable zone of red dwarf TOI-700, 100 light-years away. Orbital period: 28 days.</div><div class="dc-co">TOI-700 System · 100 LY</div></div>
+        <div class="dc"><div class="dt">Nebula</div><span class="di">💫</span><div class="dn">Pillars of Creation Mid-IR Mosaic</div><div class="dd">Webb's mid-infrared mosaic reveals thousands of hidden protostars forming in the Eagle Nebula's iconic columns.</div><div class="dc-co">M16 · 6,500 LY · Serpens</div></div>
+        <div class="dc"><div class="dt">Stellar Phenomenon</div><span class="di">🌟</span><div class="dn">Betelgeuse Pre-Supernova Indicators</div><div class="dd">Elevated silicon and aluminum in Betelgeuse's chromosphere signal late-stage nuclear burning consistent with imminent collapse.</div><div class="dc-co">α Orionis · 700 LY</div></div>
+        <div class="dc"><div class="dt">Dark Matter</div><span class="di">🌌</span><div class="dn">Abell 2744 Dark Matter Map</div><div class="dd">Gravitational lensing reveals 8 distinct dark matter sub-halos — the highest resolution dark matter map to date.</div><div class="dc-co">Abell 2744 · 3.5 BLY</div></div>
+      </div>
+    </section>
+
+    <section id="night-sky-guide">
+      <div class="sh"><div class="sh-bar"></div><div class="sh-inner"><div class="sh-title">🌙 Night Sky Guide — Tonight</div><div class="sh-count">Mar 11 · Berlin</div></div></div>
+      <div class="sb">
+        <div class="sky-lay">
+          <div>
+            <div class="sky-dome" id="skyd">
+              <div class="sky-hor"></div>
+              <div class="sky-cmp" style="top:7px;left:50%;transform:translateX(-50%)">N</div>
+              <div class="sky-cmp" style="bottom:52%;left:7px">W</div>
+              <div class="sky-cmp" style="bottom:52%;right:7px">E</div>
+              <div class="sky-cmp" style="bottom:52%;left:50%;transform:translateX(-50%)">S</div>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-top:9px;text-align:center;transition:color var(--transition)">Looking South · 21:00 Local</div>
+          </div>
+          <div class="sky-tbl">
+            <div class="sky-rw"><div class="sky-ic">♂</div><div><div class="son">Mars</div><div class="stm">Rises 18:44 · Sets 06:12</div></div><div class="smag">Mag −2.1</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span></div></div>
+            <div class="sky-rw"><div class="sky-ic">♃</div><div><div class="son">Jupiter</div><div class="stm">Rises 22:10 · Sets 11:30</div></div><div class="smag">Mag −2.5</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-off">★</span></div></div>
+            <div class="sky-rw"><div class="sky-ic">♄</div><div><div class="son">Saturn</div><div class="stm">Rises 04:50 · Low altitude</div></div><div class="smag">Mag +1.0</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-off">★</span><span class="son-off">★</span><span class="son-off">★</span></div></div>
+            <div class="sky-rw"><div class="sky-ic">🌕</div><div><div class="son">Moon (Waxing Gibbous)</div><div class="stm">Rises 14:20 · 78% illuminated</div></div><div class="smag">Mag −11.8</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-off">★</span><span class="son-off">★</span></div></div>
+            <div class="sky-rw"><div class="sky-ic">⭐</div><div><div class="son">Sirius</div><div class="stm">High in S sky · Canis Major</div></div><div class="smag">Mag −1.46</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-off">★</span></div></div>
+            <div class="sky-rw"><div class="sky-ic">🛸</div><div><div class="son">ISS Pass</div><div class="stm">23:41 UTC · 72° max elev · 6 min</div></div><div class="smag">Mag −3.8</div><div class="srat"><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span><span class="son-on">★</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<aside class="sr">
+  <div class="ad"><div class="ad-m">Advertisement</div><div class="ad-vis"><div class="adbg">SpaceX</div>🛸</div><div class="ad-br">Starlink Premium+</div><div class="ad-cp">Global satellite internet. 300 Mbps anywhere on Earth — including Antarctica.</div><div class="ad-bt">Learn More</div><div class="ad-sp">Sponsored · SpaceX Inc.</div></div>
+  <div class="ad"><div class="ad-m">Advertisement</div><div class="ad-vis"><div class="adbg">Meade</div>🔭</div><div class="ad-br">Meade LX90 12"</div><div class="ad-cp">Advanced Coma-Free telescope. See Jupiter's moons tonight. Free shipping on orders over $500.</div><div class="ad-bt">Shop Now</div><div class="ad-sp">Sponsored · Meade Instruments</div></div>
+  <div class="ad"><div class="ad-m">Advertisement</div><div class="ad-vis"><div class="adbg">Virgin</div>🚀</div><div class="ad-br">Virgin Galactic</div><div class="ad-cp">Experience zero-G. Space tourism flights open for 2027 season. Reserve your seat now.</div><div class="ad-bt">Reserve Seat</div><div class="ad-sp">Sponsored · Virgin Galactic Holdings</div></div>
+  <div class="ad"><div class="ad-m">Advertisement</div><div class="ad-vis"><div class="adbg">NASA</div>🌍</div><div class="ad-br">NASA Citizen Science</div><div class="ad-cp">1.2 million volunteers classifying galaxies and spotting asteroids. Free to join the mission.</div><div class="ad-bt">Join Program</div><div class="ad-sp">Non-profit · NASA Partner Program</div></div>
+  <div class="ad"><div class="ad-m">Advertisement</div><div class="ad-vis"><div class="adbg">App</div>📱</div><div class="ad-br">Stellarium Mobile</div><div class="ad-cp">Point your phone at the sky. Identify stars, planets and satellites in real time.</div><div class="ad-bt">Free Download</div><div class="ad-sp">Sponsored · Stellarium Labs</div></div>
+</aside>
+
+</div>
+
+<script>
+const cv = document.getElementById('nc');
+const cx = cv.getContext('2d');
+let W, H, pts = [];
+
+function resize(){
+  W = cv.width  = window.innerWidth;
+  H = cv.height = window.innerHeight;
+}
+
+function initPts(n=90){
+  pts = Array.from({length:n}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    vx:(Math.random()-.5)*.22, vy:(Math.random()-.5)*.22,
+    r: Math.random()*1.5+.6
+  }));
+}
+
+function drawNet(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  const eA = dark ? .14 : .07;
+  const nA = dark ? .26 : .12;
+  const D  = 155;
+  cx.clearRect(0,0,W,H);
+  pts.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+  });
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<D){
+        cx.beginPath();
+        const a = (1-d/D)*eA;
+        cx.strokeStyle = dark ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`;
+        cx.lineWidth=.5;
+        cx.moveTo(pts[i].x,pts[i].y);
+        cx.lineTo(pts[j].x,pts[j].y);
+        cx.stroke();
+      }
+    }
+  }
+  pts.forEach(p => {
+    cx.beginPath();
+    cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle = dark ? `rgba(255,255,255,${nA})` : `rgba(0,0,0,${nA})`;
+    cx.fill();
+  });
+  requestAnimationFrame(drawNet);
+}
+
+resize(); initPts(); drawNet();
+window.addEventListener('resize',()=>{resize();initPts();});
+
+const root = document.documentElement;
+const tog  = document.getElementById('tog');
+const mlbl = document.getElementById('mlbl');
+tog.addEventListener('click',()=>{
+  const d = root.getAttribute('data-theme')==='dark';
+  root.setAttribute('data-theme', d?'light':'dark');
+  mlbl.textContent = d?'Light':'Dark';
+});
+
+function tick(){
+  const n=new Date(), p=v=>String(v).padStart(2,'0');
+  document.getElementById('utc').textContent=
+    `${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())} UTC`;
+}
+setInterval(tick,1000); tick();
+
+const dome = document.getElementById('skyd');
+for(let i=0;i<65;i++){
+  const s=document.createElement('div');
+  s.className='sky-sd';
+  const x=Math.random()*88+6, y=Math.random()*46+5, sz=Math.random()*2+.7;
+  s.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;opacity:${(Math.random()*.5+.1).toFixed(2)}`;
+  dome.insertBefore(s, dome.children[1]);
+}
+[{label:'Mars',color:'#d84030',x:55,y:34,sz:8},
+ {label:'Jupiter',color:'#c0a050',x:28,y:50,sz:7},
+ {label:'Sirius',color:'#99c8ff',x:72,y:55,sz:5}
+].forEach(o=>{
+  const el=document.createElement('div');
+  el.style.cssText=`position:absolute;width:${o.sz}px;height:${o.sz}px;border-radius:50%;background:${o.color};box-shadow:0 0 ${o.sz*2}px ${o.color};left:${o.x}%;top:${o.y}%;transform:translate(-50%,-50%)`;
+  const lb=document.createElement('div');
+  lb.className='sky-cmp';
+  lb.textContent=o.label;
+  lb.style.cssText=`left:${o.x+2}%;top:${o.y-6}%`;
+  dome.appendChild(el); dome.appendChild(lb);
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){
+      const m=document.getElementById('mc');
+      m ? m.scrollTo({top:t.offsetTop-10,behavior:'smooth'})
+        : t.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  });
+});
+</script>
+</body>
+</html>
+
+Einfach alles kopieren, als .html speichern und im Browser öffnen — fertig!
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+Event horizon · HTML
+
