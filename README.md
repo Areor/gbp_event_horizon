@@ -21,12 +21,26 @@ python3 -m http.server 8080
 
 ---
 
+## Cloning the Repository
+
+```bash
+# Clone
+git clone https://github.com/Areor/event-horizon.git
+
+# Navigate into the folder
+cd event-horizon
+
+# Open the site
+open event-horizon.html
+```
+
+---
+
 ## Features
 
 ### Design & UI
 - **SpaceX-inspired aesthetic** — Barlow Condensed typography, monochromatic palette, military-grade precision
 - **Dark / Light Mode** — full theme toggle with smooth CSS variable transitions across all elements
-- **Animated Neural Network Background** — live Canvas-based particle network that adapts to the active theme
 - **Animated Solar System Hero** — 6 orbiting planets around a black hole with rotating accretion disk and gravitational wave pulses
 - **Live UTC Clock** — real-time UTC display in the topbar
 - **Scrolling News Ticker** — continuous breaking news feed in the header
@@ -54,7 +68,7 @@ python3 -m http.server 8080
 |---|---|
 | HTML5 | Structure |
 | CSS3 | Layout (CSS Grid), animations, CSS variables for theming |
-| Vanilla JavaScript | Neural network canvas, clock, sky dome, theme toggle, smooth scroll |
+| Vanilla JavaScript | Clock, sky dome, theme toggle, smooth scroll |
 | Google Fonts | Barlow Condensed + Barlow |
 
 **No frameworks. No dependencies. Zero build steps.**  
@@ -78,18 +92,6 @@ Change the `data-theme` attribute on the `<html>` tag:
 ```html
 <html data-theme="dark">   <!-- default dark -->
 <html data-theme="light">  <!-- default light -->
-```
-
-### Neural network density
-Adjust node count in the JS `initPts()` call:
-```js
-initPts(90)   // default — increase for denser network
-```
-
-### Connection distance
-Change the `D` constant in `drawNet()`:
-```js
-const D = 155;  // max pixel distance between connected nodes
 ```
 
 ### Add news stories
@@ -135,8 +137,8 @@ Duplicate a `.tick-item` in both the first and second half of `.tick-inner` (the
 
 ## License
 
-Free to use, modify and distribute for personal and commercial projects.  
-All news content is fictional and for demonstration purposes only.  
+Free to use, modify and distribute for personal and commercial projects.
+All news content is fictional and for demonstration purposes only.
 Advertisement slots are placeholder/fake — no real advertisers involved.
 
 ---
